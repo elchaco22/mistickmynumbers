@@ -1,0 +1,39 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Generador Completo</title>
+<meta name="description" content="Generador de combinaciones de 4, 3 y 2 cifras con tablas de equivalencias.">
+<meta name="theme-color" content="#0b57c9">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Generador"><style>
+body{margin:0;font-family:Arial;color:#fff;background:linear-gradient(135deg,#06184b,#0b57c9,#32a7ff);min-height:100vh}main{max-width:1200px;margin:auto;padding:18px}.card{background:#ffffff20;border-radius:18px;padding:16px;margin:12px 0}.row{display:flex;gap:9px;flex-wrap:wrap}input,select,button{padding:12px;border:0;border-radius:11px;font-size:15px}input{flex:1;min-width:130px}button{font-weight:bold;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px}.item{background:#fff2;padding:10px;border-radius:10px;text-align:center}.fav{font-size:18px}.empty{text-align:center;padding:24px;opacity:.8}.small{font-size:12px;opacity:.9}.strong{outline:2px solid #fff8}.stats{display:flex;gap:8px;flex-wrap:wrap}.stat{flex:1;min-width:150px;background:#0002;padding:10px;border-radius:10px}h1{text-align:center}
+</style></head><body><main><h1>🎯 Generador Completo</h1>
+<div class=card><div class=row><input id=base maxlength=4 placeholder="Base de 4 cifras: 5484" inputmode=numeric><select id=tabla><option value=1>Tabla 1</option><option value=2>Tabla 2</option><option value=3>Tabla 3</option></select><select id=limite><option value=0>Todos</option><option value=10>Top 10</option><option value=20>Top 20</option><option value=50>Top 50</option><option value=100>Top 100</option></select><select id=minP><option value=0>Todos los puntos</option><option value=12>12+ puntos</option><option value=10>10+ puntos</option><option value=8>8+ puntos</option><option value=6>6+ puntos</option></select><button id=gen>Generar</button><button id=clear>🗑 Limpiar</button><button id=copy>📋 Copiar</button></div><div class=row><input id=buscar placeholder="🔎 Buscar número"><button id=guardar>💾 Guardar generación</button><button id=comparar>📊 Comparar 3 tablas</button></div></div>
+<div class=card><div class=stats><div class=stat>Base: <b id=outBase>—</b></div><div class=stat>Resultados: <b id=total>0</b></div><div class=stat>Favoritos: <b id=favCount>0</b></div></div></div>
+<div class=card><div class=row><button data-n=4>4 cifras</button><button data-n=3>3 cifras</button><button data-n=2>2 cifras</button><button id=verFav>⭐ Ver favoritos</button></div><h2 id=titulo>Resultados</h2><div id=res class=empty>Ingresá una base de 4 cifras.</div></div>
+<div class=card><h2>📈 Estadísticas de terminaciones</h2><div id=estad class=empty>Generá resultados.</div></div>
+<div class=card><h2>💾 Generaciones guardadas</h2><div id=hist class=small>Todavía no hay generaciones guardadas.</div></div>
+<div class=card><h2>📊 Comparación de tablas</h2><div id=comp class=empty>Tocá Comparar 3 tablas.</div></div>
+<script>
+const T={1:{0:[4,1],1:[7,0],2:[5,9],3:[8,8],4:[0,7],5:[2,6],6:[9,5],7:[1,4],8:[3,3],9:[6,2]},2:{0:[1,1],1:[0,0],2:[5,7],3:[8,0],4:[6,9],5:[2,7],6:[4,9],7:[2,5],8:[3,0],9:[6,4]},3:{0:[1,5],1:[0,6],2:[5,7],3:[8,8],4:[6,9],5:[2,0],6:[4,1],7:[2,2],8:[3,3],9:[6,4]}};
+let data={2:[],3:[],4:[]},mode=4,favs=new Set(),saved=[];
+function op(d,t){return[''+d,...T[t][d].map(String)]}function prod(a){return a.reduce((r,z)=>r.flatMap(x=>z.map(y=>x+y)),[''])}function cross(s){return s.length==4?s[0]+s[2]+s[1]+s[3]:s.length==3?s[0]+s[2]+s[1]:s[1]+s[0]}function score(x,b,t){let p=0;for(let i=0;i<x.length;i++){let o=op(b[i],t);p+=x[i]==o[0]?3:x[i]==o[1]?2:1}return p}
+function calc(base,n,t){let b=base.slice(0,n),all=[...prod([...b].map(d=>op(d,t))),...prod([...cross(b)].map(d=>op(d,t))),...prod([...b].reverse().map(d=>op(d,t)))],u=[...new Set(all)],max=n*3;return u.map(x=>{let p=score(x,b,t);return{x,p,q:Math.round(p/max*100),fin:x.slice(-2)}}).sort((a,b)=>b.p-a.p||b.q-a.q||a.x.localeCompare(b.x))}
+function render(){let a=[...data[mode]],min=+minP.value,lim=+limite.value,bus=buscar.value.trim();if(min)a=a.filter(x=>x.p>=min);if(bus)a=a.filter(x=>x.x.includes(bus));if(lim)a=a.slice(0,lim);titulo.textContent=`Resultados de ${mode} cifras (${a.length})`;res.className='grid';res.innerHTML=a.length?a.map((x,i)=>`<div class="item ${x.p>=mode*3-1?'strong':''}"><button class=fav onclick="fav('${x.x}')">${favs.has(x.x)?'⭐':'☆'}</button><br><b>#${i+1} · ${x.x}</b><br><span class=small>${x.p} puntos · ${x.q}% · ${x.fin}</span></div>`).join(''):'<div class=empty>Sin resultados.</div>';favCount.textContent=favs.size}
+function fav(x){favs.has(x)?favs.delete(x):favs.add(x);render()}window.fav=fav;
+function stats(){let m={};data[4].forEach(x=>m[x.fin]=(m[x.fin]||0)+1);estad.className='grid';estad.innerHTML=Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class=item><b>${k}</b><br><small>${v} veces</small></div>`).join('')}
+gen.onclick=()=>{let b=base.value.replace(/\D/g,'');if(b.length!=4)return alert('Ingresá exactamente 4 cifras.');let t=+tabla.value;[2,3,4].forEach(n=>data[n]=calc(b,n,t));outBase.textContent=b;total.textContent=data[4].length;render();stats()}
+clear.onclick=()=>{base.value='';data={2:[],3:[],4:[]};res.className='empty';res.textContent='Resultados borrados.';estad.className='empty';estad.textContent='Resultados borrados.'}
+document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{mode=+b.dataset.n;render()});limite.onchange=render;minP.onchange=render;buscar.oninput=render;
+verFav.onclick=()=>{let a=data[mode].filter(x=>favs.has(x.x));res.className='grid';res.innerHTML=a.map((x,i)=>`<div class=item><b>#${i+1} · ${x.x}</b><br>${x.p} puntos</div>`).join('')||'<div class=empty>No hay favoritos.</div>'}
+copy.onclick=async()=>{let txt=data[mode].map((x,i)=>`${i+1}. ${x.x} - ${x.p} puntos - ${x.q}%`).join('\\n');try{await navigator.clipboard.writeText(txt);alert('Resultados copiados.')}catch(e){alert('No se pudo copiar en este navegador.')}}
+guardar.onclick=()=>{let b=base.value;let t=tabla.value;if(!b)return;saved.unshift(`Base ${b} · Tabla ${t} · ${new Date().toLocaleString()}`);saved=saved.slice(0,20);hist.innerHTML=saved.join('<br>')}
+comparar.onclick=()=>{let b=base.value.replace(/\D/g,'');if(b.length!=4)return alert('Ingresá una base de 4 cifras primero.');comp.className='grid';comp.innerHTML=[1,2,3].map(t=>{let a=calc(b,4,t);return `<div class=item><b>Tabla ${t}</b><br><small>${a.length} únicos<br>Mejor: ${a[0].x} · ${a[0].p} pts</small></div>`}).join('')}
+// Persistencia simple en el navegador
+try {
+  const oldBase=localStorage.getItem("gc_base"); if(oldBase) base.value=oldBase;
+  const oldFav=JSON.parse(localStorage.getItem("gc_favs")||"[]"); favs=new Set(oldFav);
+  base.addEventListener("input",()=>localStorage.setItem("gc_base",base.value));
+  const oldFavFn=window.fav;
+  window.fav=function(x){oldFavFn(x);localStorage.setItem("gc_favs",JSON.stringify([...favs]));};
+} catch(e) {}
+</script></main></body></html>
